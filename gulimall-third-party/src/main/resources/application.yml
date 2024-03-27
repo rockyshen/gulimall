@@ -1,0 +1,18 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+# 提取到nacos配置中心中去读，注意重启nacos，才能读到！
+    alicloud:
+      oss:
+        endpoint: oss-cn-shanghai.aliyuncs.com
+        bucket: gulimall-rockyshen
+      access-key: LTAI5tGNmsHDpCCL81aDse4s
+      secret-key: FETzGymAxTLrKWDRcMupPAKaeBCTFm
+  application:
+    name: gulimall-third-party
+
+server:
+  port: 30000
+

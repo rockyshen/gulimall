@@ -11,3 +11,29 @@ spring:
           uri: https://www.qq.com
           predicates:
             - Query=url,qq
+
+        - id: product_route
+          uri: lb://gulimall-product
+          predicates:
+            - Path=/api/product/**
+          filters:
+            - RewritePath=/api/(?<segment>.*),/$\{segment}
+            # http://localhost:88/api/product/category/list/tree  ->  http://localhost:10000/product/category/list/tree
+
+        - id: third_party_route
+          uri: lb://gulimall-third-party
+          predicates:
+            - Path=/api/thirdparty/**
+          filters:
+            # http://localhost:88/api/thirdparty/oss/policy  ->  http://localhost:30000/oss/policy
+            - RewritePath=/api/thirdparty/(?<segment>.*),/$\{segment}
+
+
+        - id: admin_route
+          uri: lb://renren-fast    # 负载均衡 + 微服务名
+          predicates:
+            - Path=/api/**        # 前端页面发起的请求，只要带上api字段，就定位到renren-fast这个微服务上
+          filters:
+            - RewritePath=/api/(?<segment>.*),/renren-fast/$\{segment}
+            # 前端项目发的：http://localhost:88/api/captcha.jpg  ->  http://localhost:8080/renren-fast/captcha.jpg
+

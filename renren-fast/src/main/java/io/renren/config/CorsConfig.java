@@ -15,12 +15,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-            .allowedOriginPatterns("*")
-            .allowCredentials(true)
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            .maxAge(3600);
-    }
+    // Spring Gateway已经配置了跨域的配置类，不要重复了！
+//    @Override
+//    public void addCorsMappings(CorsRegistry registry) {
+//        registry.addMapping("/**")
+//            .allowedOrigins("*")   // 新版SpringBoot下，allowedOrigins 替换为 allowedOriginPatterns
+//            .allowCredentials(true)
+//            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+//            .maxAge(3600);
+//    }
 }
