@@ -8,8 +8,8 @@ spring:
       oss:
         endpoint: oss-cn-shanghai.aliyuncs.com
         bucket: gulimall-rockyshen
-      access-key: LTAI5tGNmsHDpCCL81aDse4s
-      secret-key: FETzGymAxTLrKWDRcMupPAKaeBCTFm
+      access-key: # github中隐藏key信息
+      secret-key: # github中隐藏key信息
   application:
     name: gulimall-third-party
 
