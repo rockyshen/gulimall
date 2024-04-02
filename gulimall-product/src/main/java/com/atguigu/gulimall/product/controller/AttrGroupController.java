@@ -1,16 +1,16 @@
 package com.atguigu.gulimall.product.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.atguigu.gulimall.product.entity.AttrEntity;
+import com.atguigu.gulimall.product.service.AttrService;
 import com.atguigu.gulimall.product.service.CategoryService;
+import com.atguigu.gulimall.product.vo.AttrGroupRelationVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gulimall.product.entity.AttrGroupEntity;
 import com.atguigu.gulimall.product.service.AttrGroupService;
@@ -34,6 +34,22 @@ public class AttrGroupController {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private AttrService attrService;
+
+    /**
+     * 根据attrGroupId，查询attr实体类的全部信息
+     * @param attrGroupId
+     * @return
+     */
+    @GetMapping("/{attrgroupId}/attr/relation")
+    public R attrRelation(@PathVariable("attrgroupId") Long attrGroupId){
+        List<AttrEntity> entities = attrService.getRelationAttr(attrGroupId);
+
+        return R.ok().put("data",entities);
+    }
+
 
     /**
      * 列表
@@ -94,6 +110,17 @@ public class AttrGroupController {
 //    @RequiresPermissions("product:attrgroup:delete")
     public R delete(@RequestBody Long[] attrGroupIds){
 		attrGroupService.removeByIds(Arrays.asList(attrGroupIds));
+
+        return R.ok();
+    }
+
+    /**
+     * 从AttrGroupRelationVo接收
+     * 根据提交的{attr_id, attr_group_id}删除 ？？
+     */
+    @PostMapping("/attr/relation/delete")
+    public R deleteRelation(@RequestBody AttrGroupRelationVo[] vos){
+        attrService.deleteRelation(vos);
 
         return R.ok();
     }

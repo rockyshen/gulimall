@@ -8,6 +8,7 @@ import com.atguigu.gulimall.product.entity.AttrAttrgroupRelationEntity;
 import com.atguigu.gulimall.product.entity.AttrGroupEntity;
 import com.atguigu.gulimall.product.entity.CategoryEntity;
 import com.atguigu.gulimall.product.service.CategoryService;
+import com.atguigu.gulimall.product.vo.AttrGroupRelationVo;
 import com.atguigu.gulimall.product.vo.AttrRespVo;
 import com.atguigu.gulimall.product.vo.AttrVo;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
@@ -15,6 +16,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -47,28 +51,6 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
     @Autowired
     private CategoryService categoryService;
 
-
-    /**
-     * 保存
-     * attr,及其关联表单
-     * @param attr
-     */
-    @Override
-    @Transactional
-    public void saveAttr(AttrVo attr) {
-        //1.先保存pms_attr中的信息
-        AttrEntity attrEntity = new AttrEntity();
-        BeanUtils.copyProperties(attr,attrEntity);  //将AttrVo的值，批量复制到AttrEntity中
-        this.save(attrEntity);
-
-        if(attr.getAttrType() == ProductConstant.ATTR_TYPE_BASE.getCode()){  //只有base_attr才去保存关联表，销售属性不用走这个
-            //2.再保存关联表 pms_attr_attrgroup_relation中的信息（和分类中的类似）
-            AttrAttrgroupRelationEntity attrAttrgroupRelationEntity = new AttrAttrgroupRelationEntity();
-            attrAttrgroupRelationEntity.setAttrGroupId(attr.getAttrGroupId());
-            attrAttrgroupRelationEntity.setAttrId(attrEntity.getAttrId());
-            attrAttrgroupRelationDao.insert(attrAttrgroupRelationEntity);
-        }
-    }
 
     /**
      * 分页查询
@@ -177,6 +159,49 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
     }
 
     /**
+     * 根据attr_group_id 查找 attr实体类的全部信息
+     * @param attrGroupId
+     * @return
+     */
+    @Override
+    public List<AttrEntity> getRelationAttr(Long attrGroupId) {
+        //在attr_attrgroup_relation表中，查到所有是attrGroupId的attr_id
+        List<AttrAttrgroupRelationEntity> entities = attrAttrgroupRelationDao.selectList(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_group_id", attrGroupId));
+        //从满足条件的对象中收集attr_id即可，其他信息不要
+        List<Long> attrIds = entities.stream().map((attr) -> {
+            return attr.getAttrId();
+        }).collect(Collectors.toList());
+
+        if(attrIds == null || attrIds.size() == 0){
+            return null;
+        }
+        Collection<AttrEntity> attrEntities = this.listByIds(attrIds);
+        return (List<AttrEntity>) attrEntities; //类型转换，从Collection，转为List。
+    }
+
+    /**
+     * 保存
+     * attr,及其关联表单
+     * @param attr
+     */
+    @Override
+    @Transactional
+    public void saveAttr(AttrVo attr) {
+        //1.先保存pms_attr中的信息
+        AttrEntity attrEntity = new AttrEntity();
+        BeanUtils.copyProperties(attr,attrEntity);  //将AttrVo的值，批量复制到AttrEntity中
+        this.save(attrEntity);
+
+        if(attr.getAttrType() == ProductConstant.ATTR_TYPE_BASE.getCode()){  //只有base_attr才去保存关联表，销售属性不用走这个
+            //2.再保存关联表 pms_attr_attrgroup_relation中的信息（和分类中的类似）
+            AttrAttrgroupRelationEntity attrAttrgroupRelationEntity = new AttrAttrgroupRelationEntity();
+            attrAttrgroupRelationEntity.setAttrGroupId(attr.getAttrGroupId());
+            attrAttrgroupRelationEntity.setAttrId(attrEntity.getAttrId());
+            attrAttrgroupRelationDao.insert(attrAttrgroupRelationEntity);
+        }
+    }
+
+    /**
      * Update
      * 更新attr，及其关联表单
      * @param attrVo
@@ -208,5 +233,22 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         }
     }
 
+    /**
+     * 删除
+     * 从AttrGroupRelationVo接收
+     * [{"attrId":1,"attrGroupId":2}, {}, {}]
+     * 根据提交的{attr_id, attr_group_id}删除 关联关系
+     */
+    @Override
+    public void deleteRelation(AttrGroupRelationVo[] vos) {
+        // vos -> attrAttrgroupRelationEntity
+        List<AttrAttrgroupRelationEntity> entities = Arrays.asList(vos).stream().map((item) -> {
+            AttrAttrgroupRelationEntity attrAttrgroupRelationEntity = new AttrAttrgroupRelationEntity();
+            BeanUtils.copyProperties(item, attrAttrgroupRelationEntity);
+            return attrAttrgroupRelationEntity;
+        }).collect(Collectors.toList());
+
+        attrAttrgroupRelationDao.deleteBatchRelation(entities);
+    }
 
 }
