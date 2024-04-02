@@ -51,8 +51,7 @@ public class CategoryController {
 //    @RequiresPermissions("product:category:info")
     public R info(@PathVariable("catId") Long catId){
 		CategoryEntity category = categoryService.getById(catId);
-
-        return R.ok().put("category", category);
+        return R.ok().put("data", category);    // 原来写成 .put("category",category)，前端必然读不到！
     }
 
     /**
@@ -72,7 +71,10 @@ public class CategoryController {
     @RequestMapping("/update")
 //    @RequiresPermissions("product:category:update")
     public R update(@RequestBody CategoryEntity category){
-		categoryService.updateById(category);
+		// 数据库单表冗余设计
+        // 当pms_category更新name时，pms_category_brand_relation也要同步改
+
+        categoryService.updateDetail(category);
 
         return R.ok();
     }

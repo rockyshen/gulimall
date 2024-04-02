@@ -6,6 +6,7 @@ import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.common.utils.BinaryUtil;
 import com.aliyun.oss.model.MatchMode;
 import com.aliyun.oss.model.PolicyConditions;
+import com.atguigu.common.utils.R;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
+//@RequestMapping("/thirdparty")
 public class OssController {
 
     @Autowired
@@ -39,7 +41,7 @@ public class OssController {
     OSS,签名直传服务
      */
     @RequestMapping("/oss/policy")
-    public Map<String,String> policy() {
+    public R policy() {
 //        // 从环境变量中获取访问凭证。运行本代码示例之前，请确保已设置环境变量OSS_ACCESS_KEY_ID和OSS_ACCESS_KEY_SECRET。
 //        EnvironmentVariableCredentialsProvider credentialsProvider = CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
         // Endpoint以华东1（杭州）为例，其他Region请按实际情况填写。
@@ -80,29 +82,29 @@ public class OssController {
             respMap.put("dir", dir);
             respMap.put("host", host);
             respMap.put("expire", String.valueOf(expireEndTime / 1000));
-
             // respMap.put("expire", formatISO8601Date(expiration));
+            /* 跨域的，我们之前已经设置过来，这段都不要了！！
+            JSONObject jasonCallback = new JSONObject();
+            jasonCallback.put("callbackUrl", callbackUrl);
+            jasonCallback.put("callbackBody",
+                    "filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}");
+            jasonCallback.put("callbackBodyType", "application/x-www-form-urlencoded");
+            String base64CallbackBody = BinaryUtil.toBase64String(jasonCallback.toString().getBytes());
+            respMap.put("callback", base64CallbackBody);
 
-            // 跨域的，我们之前已经设置过来，这段都不要了！！
-//            JSONObject jasonCallback = new JSONObject();
-//            jasonCallback.put("callbackUrl", callbackUrl);
-//            jasonCallback.put("callbackBody",
-//                    "filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}");
-//            jasonCallback.put("callbackBodyType", "application/x-www-form-urlencoded");
-//            String base64CallbackBody = BinaryUtil.toBase64String(jasonCallback.toString().getBytes());
-//            respMap.put("callback", base64CallbackBody);
-//
-//            JSONObject ja1 = JSONObject.fromObject(respMap);
-//            // System.out.println(ja1.toString());
-//            response.setHeader("Access-Control-Allow-Origin", "*");
-//            response.setHeader("Access-Control-Allow-Methods", "GET, POST");
-//            response(request, response, ja1.toString());
+            JSONObject ja1 = JSONObject.fromObject(respMap);
+            // System.out.println(ja1.toString());
+            response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader("Access-Control-Allow-Methods", "GET, POST");
+            response(request, response, ja1.toString());
+
+             */
         } catch (Exception e) {
             // Assert.fail(e.getMessage());
             System.out.println(e.getMessage());
         }finally {
             ossClient.shutdown();
         }
-        return respMap;
+        return R.ok().put("data",respMap);  //把签名数据封装在R中
     }
 }

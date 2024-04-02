@@ -4,12 +4,10 @@ import java.util.Arrays;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.atguigu.gulimall.product.vo.AttrRespVo;
+import com.atguigu.gulimall.product.vo.AttrVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gulimall.product.entity.AttrEntity;
 import com.atguigu.gulimall.product.service.AttrService;
@@ -32,6 +30,19 @@ public class AttrController {
     private AttrService attrService;
 
     /**
+     * 保存
+     * 默认生成的保存，只能保存到：pms_attr表单中，已经很智能了！
+     * 维护到pms_attr_attrgroup_relation表单中同步保存（必然要开启事务）
+     */
+    @RequestMapping("/save")
+//    @RequiresPermissions("product:attr:save")
+    public R save(@RequestBody AttrVo attr){
+        attrService.saveAttr(attr);
+        return R.ok();
+    }
+
+
+    /**
      * 列表
      */
     @RequestMapping("/list")
@@ -42,6 +53,22 @@ public class AttrController {
         return R.ok().put("page", page);
     }
 
+    /**
+     * 查询
+     * 规格参数，也就是base_attr，type=0
+     * 销售属性，type=1
+     * @param params，用于封装分页信息，PageUtils
+     * @param catelogId
+     * @return
+     */
+    @GetMapping("/{attrType}/list/{catelogId}")
+    public R baseAttrList(@RequestParam Map<String, Object> params,
+                          @PathVariable("catelogId") Long catelogId,
+                          @PathVariable("attrType") String type){
+        PageUtils page = attrService.queryBaseAttrPage(params,catelogId,type);
+        return R.ok().put("page",page);
+    }
+
 
     /**
      * 信息
@@ -49,20 +76,12 @@ public class AttrController {
     @RequestMapping("/info/{attrId}")
 //    @RequiresPermissions("product:attr:info")
     public R info(@PathVariable("attrId") Long attrId){
-		AttrEntity attr = attrService.getById(attrId);
+//		AttrEntity attr = attrService.getById(attrId);
+        // 补充包含关联表信息
+        AttrRespVo respVo = attrService.getAttrInfo(attrId);
 
-        return R.ok().put("attr", attr);
-    }
 
-    /**
-     * 保存
-     */
-    @RequestMapping("/save")
-//    @RequiresPermissions("product:attr:save")
-    public R save(@RequestBody AttrEntity attr){
-		attrService.save(attr);
-
-        return R.ok();
+        return R.ok().put("attr", respVo);
     }
 
     /**
@@ -70,8 +89,8 @@ public class AttrController {
      */
     @RequestMapping("/update")
 //    @RequiresPermissions("product:attr:update")
-    public R update(@RequestBody AttrEntity attr){
-		attrService.updateById(attr);
+    public R update(@RequestBody AttrVo attr){
+		attrService.updateAttr(attr);
 
         return R.ok();
     }
