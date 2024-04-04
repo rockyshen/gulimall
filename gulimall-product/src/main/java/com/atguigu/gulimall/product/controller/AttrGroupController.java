@@ -5,10 +5,14 @@ import java.util.List;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.atguigu.gulimall.product.entity.AttrAttrgroupRelationEntity;
 import com.atguigu.gulimall.product.entity.AttrEntity;
+import com.atguigu.gulimall.product.service.AttrAttrgroupRelationService;
 import com.atguigu.gulimall.product.service.AttrService;
 import com.atguigu.gulimall.product.service.CategoryService;
 import com.atguigu.gulimall.product.vo.AttrGroupRelationVo;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,16 +42,30 @@ public class AttrGroupController {
     @Autowired
     private AttrService attrService;
 
+    @Autowired
+    AttrAttrgroupRelationService attrAttrgroupRelationService;
+
     /**
-     * 根据attrGroupId，查询attr实体类的全部信息
+     * 根据attrGroupId，查询当前分组下的所有属性（也即：attr实体）
      * @param attrGroupId
      * @return
      */
     @GetMapping("/{attrgroupId}/attr/relation")
     public R attrRelation(@PathVariable("attrgroupId") Long attrGroupId){
         List<AttrEntity> entities = attrService.getRelationAttr(attrGroupId);
-
         return R.ok().put("data",entities);
+    }
+
+    /**
+     * 根据attrGroupId，查询当前分组，没有关联的所有属性（attrEntity)
+     * @param attrGroupId
+     * @return
+     */
+    @GetMapping("/{attrgroupId}/noattr/relation")
+    public R attrNoRelation(@PathVariable("attrgroupId") Long attrGroupId,
+                            @RequestParam Map<String, Object> params){
+        PageUtils page = attrService.getNoRelationAttr(attrGroupId,params);
+        return R.ok().put("page",page);
     }
 
 
@@ -92,6 +110,14 @@ public class AttrGroupController {
 
         return R.ok();
     }
+
+    @PostMapping("/attr/relation")
+    public R addRelation(@RequestBody List<AttrGroupRelationVo> vos){
+        attrAttrgroupRelationService.saveBatch(vos);
+
+        return R.ok();
+    }
+
 
     /**
      * 修改
