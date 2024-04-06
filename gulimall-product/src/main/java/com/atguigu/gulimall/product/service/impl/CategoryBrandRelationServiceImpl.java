@@ -7,8 +7,13 @@ import com.atguigu.gulimall.product.service.BrandService;
 import com.atguigu.gulimall.product.service.CategoryService;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -27,7 +32,14 @@ public class CategoryBrandRelationServiceImpl extends ServiceImpl<CategoryBrandR
     private BrandDao brandDao;
 
     @Autowired
+//    @Lazy
+    private BrandService brandService;
+
+    @Autowired
     private CategoryDao categoryDao;
+
+    @Autowired
+    private CategoryBrandRelationDao categoryBrandRelationDao;
 
 
     @Override
@@ -91,6 +103,24 @@ public class CategoryBrandRelationServiceImpl extends ServiceImpl<CategoryBrandR
         updateWrapper.eq("catelog_id",catId);
 
         this.update(relationEntity,updateWrapper);
+    }
+
+    /**
+     * 查询当前分类关联的所有品牌
+     * @param catId
+     * @return:brandEntities
+     */
+    @Override
+    public List<BrandEntity> getBrandsByCatId(Long catId) {
+        List<CategoryBrandRelationEntity> relationEntities = categoryBrandRelationDao.selectList(new QueryWrapper<CategoryBrandRelationEntity>().eq("catelog_id", catId));
+        //要么，我们改一下签名的函数返回值类型为：CategoryBrandRelationEntity
+        //要么，在CategoryBrandRelationEntity基础上，查到BrandEntity，雷神选这种
+        List<BrandEntity> collect = relationEntities.stream().map((item) -> {
+            Long brandId = item.getBrandId();
+            BrandEntity byId = brandService.getById(brandId);
+            return byId;
+        }).collect(Collectors.toList());
+        return collect;
     }
 
 

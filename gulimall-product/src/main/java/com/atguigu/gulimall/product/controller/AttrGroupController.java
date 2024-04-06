@@ -11,6 +11,7 @@ import com.atguigu.gulimall.product.service.AttrAttrgroupRelationService;
 import com.atguigu.gulimall.product.service.AttrService;
 import com.atguigu.gulimall.product.service.CategoryService;
 import com.atguigu.gulimall.product.vo.AttrGroupRelationVo;
+import com.atguigu.gulimall.product.vo.AttrGroupWithAttrsVo;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,18 @@ public class AttrGroupController {
 
     @Autowired
     AttrAttrgroupRelationService attrAttrgroupRelationService;
+
+
+    /**
+     * 获取当前分类下的所有属性分组，并带上每个属性分组里的属性
+     */
+    @GetMapping("/{catelogId}/withattr")
+    public R getAttrGroupWithAttrs(@PathVariable("catelogId") Long catelogId){
+        //1.查出当前分类下的所有属性分组 attr group service就能查，pms_attr_group表里就有
+        //2.根据查到的属性分组，查出每个属性分组里的属性。要利用attr attrgroup relation查到attr_id,再去attr表中获取属性实体
+        List<AttrGroupWithAttrsVo> vos = attrGroupService.getAttrGroupWithAttrsByCatelogId(catelogId);
+        return R.ok().put("data",vos);
+    }
 
     /**
      * 根据attrGroupId，查询当前分组下的所有属性（也即：attr实体）

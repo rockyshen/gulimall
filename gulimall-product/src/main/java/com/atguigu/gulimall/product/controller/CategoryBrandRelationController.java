@@ -3,8 +3,11 @@ package com.atguigu.gulimall.product.controller;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.atguigu.gulimall.product.entity.BrandEntity;
+import com.atguigu.gulimall.product.vo.BrandVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -29,22 +32,6 @@ public class CategoryBrandRelationController {
     @Autowired
     private CategoryBrandRelationService categoryBrandRelationService;
 
-    /**
-    根据brand_id查询当前品牌关联的所有分类
-    一个品牌，可以关联多个分类（例如小米，可以关联手机分类，小家电分类
-    一个分类，也关联多个品牌
-    所以 brand 和 catagory 是多对多关系。
-     */
-    @GetMapping("/catelog/list")
-//    @RequiresPermissions("product:categorybrandrelation:list")
-    public R cateloglist(@RequestParam("brandId") Long brandId) {
-        // mybatis-plus的增强service，list()方法，查询全部，返回集合
-        List<CategoryBrandRelationEntity> data = categoryBrandRelationService.list(
-                new QueryWrapper<CategoryBrandRelationEntity>().eq("brand_id",brandId)
-        );
-        return R.ok().put("data",data);
-    }
-
 
     /**
      * 列表
@@ -57,6 +44,40 @@ public class CategoryBrandRelationController {
         return R.ok().put("page", page);
     }
 
+    /**
+     * 查询当前分类关联的所有品牌
+     * @return：brandVo
+     */
+    @GetMapping("/brands/list")
+    public R relationBrandsList(@RequestParam(value = "catId",required = true) Long catId){
+        List<BrandEntity> brandEntities = categoryBrandRelationService.getBrandsByCatId(catId);
+
+        // 这里不算是处理业务，而是处理service层返回的结果！
+        List<BrandVo> collect = brandEntities.stream().map((item) -> {
+            BrandVo brandVo = new BrandVo();
+            brandVo.setBrandName(item.getName());
+            brandVo.setBrandId(item.getBrandId());
+            return brandVo;
+        }).collect(Collectors.toList());
+        return R.ok().put("data",collect);
+    }
+
+
+    /**
+     根据brand_id查询当前品牌关联的所有分类
+     一个品牌，可以关联多个分类（例如小米，可以关联手机分类，小家电分类
+     一个分类，也关联多个品牌
+     所以 brand 和 catagory 是多对多关系。
+     */
+    @GetMapping("/catelog/list")
+//    @RequiresPermissions("product:categorybrandrelation:list")
+    public R cateloglist(@RequestParam("brandId") Long brandId) {
+        // mybatis-plus的增强service，list()方法，查询全部，返回集合
+        List<CategoryBrandRelationEntity> data = categoryBrandRelationService.list(
+                new QueryWrapper<CategoryBrandRelationEntity>().eq("brand_id",brandId)
+        );
+        return R.ok().put("data",data);
+    }
 
     /**
      * 信息

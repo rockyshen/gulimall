@@ -77,7 +77,8 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
      */
     @Override
     public PageUtils queryBaseAttrPage(Map<String, Object> params, Long catelogId, String type) {
-        QueryWrapper<AttrEntity> queryWrapper = new QueryWrapper<AttrEntity>().eq("attr_type","base".equalsIgnoreCase(type)?ProductConstant.ATTR_TYPE_BASE.getCode():ProductConstant.ATTR_TYPE_SALE.getCode());  //三元运算符，如果是base,就匹配0，否则匹配1
+        QueryWrapper<AttrEntity> queryWrapper = new QueryWrapper<AttrEntity>()
+                .eq("attr_type","base".equalsIgnoreCase(type)?ProductConstant.ATTR_TYPE_BASE.getCode():ProductConstant.ATTR_TYPE_SALE.getCode());  //三元运算符，如果是base,就匹配0，否则匹配1
         // 如果没有传catelogId,就是查全部
         if(catelogId != 0){
             queryWrapper.eq("catelog_id",catelogId);
@@ -91,7 +92,8 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
                         wrapper.eq("attr_id",key).or().like("attr_name",key);
                     });
         }
-        // 查询全部
+
+        // 多条件分页，查询全部
         IPage<AttrEntity> page = this.page(
                 new Query<AttrEntity>().getPage(params),
                 queryWrapper
@@ -104,7 +106,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
 
             //查询并设置base_attr关联表中的：分组名 、 分类名
             // base_attr（规格参数）才进这个查询
-            if("base".equalsIgnoreCase(type)){
+            if(attrEntity.getAttrType() == ProductConstant.ATTR_TYPE_BASE.getCode()){
                 AttrAttrgroupRelationEntity attrId = attrAttrgroupRelationDao.selectOne(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_id", attrEntity.getAttrId()));
                 if (attrId != null && attrId.getAttrGroupId() != null) {
                     AttrGroupEntity attrGroupEntity = attrGroupDao.selectById(attrId.getAttrGroupId());

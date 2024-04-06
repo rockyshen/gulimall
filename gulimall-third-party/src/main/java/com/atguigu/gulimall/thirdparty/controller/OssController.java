@@ -55,7 +55,7 @@ public class OssController {
         // 设置上传到OSS文件的前缀，可置空此项。置空后，文件将上传至Bucket的根目录下。
         // 按当天日期新建一个文件夹
         String format = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-        String dir = format + "/";
+        String dir = format;  // format + "/"   不要加一个斜杠，不然的话，OSS的文件夹就会多个斜杠命名的文件夹，多此一举！
 
         // 创建OSSClient实例。
 //        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId,accessKeySecret);
