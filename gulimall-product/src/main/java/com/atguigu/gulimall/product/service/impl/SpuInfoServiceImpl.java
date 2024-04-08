@@ -12,6 +12,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import com.atguigu.common.utils.Query;
 
 import com.atguigu.gulimall.product.dao.SpuInfoDao;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 
 @Service("spuInfoService")
@@ -64,6 +66,12 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         return new PageUtils(page);
     }
 
+    /**
+     * 从后台管理系统获取一个大JSON，保存商品的完整信息
+     * 2024.4.8 完整跑通了
+     * TODO 如果保存失败的情况，在高级篇里补充！
+     * @param vo
+     */
     @Transactional   //商品完整JSON的大保存，必须加上事务
     @Override
     public void saveSpuInfo(SpuSaveVo vo) {
@@ -142,6 +150,8 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 skuImagesEntity.setImgUrl(img.getImgUrl());
                 skuImagesEntity.setDefaultImg(img.getDefaultImg());
                 return skuImagesEntity;
+            }).filter(entity -> {
+                return !StringUtils.isEmpty(entity.getImgUrl()); // 没有图片，路径无需保存,imgUrl有的才会通过
             }).collect(Collectors.toList());
 
             //5.2 sku的图片信息 sku_images
@@ -162,14 +172,17 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             SkuReductionTo skuReductionTo = new SkuReductionTo();
             BeanUtils.copyProperties(item,skuReductionTo);
             skuReductionTo.setSkuId(skuId);
-            R r1 = couponFeignService.saveSkuReduction(skuReductionTo);
-
-            // 判断远程调用是否返回success
-            Integer code1 = (Integer)r1.get("code");
-            System.out.println("********"+code1.toString());
-            if (code1 != 0){
-                log.error("远程保存sku积分信息失败！");
+            // 满减信息中如果有0的，过滤掉
+            if(skuReductionTo.getFullCount() > 0 || skuReductionTo.getFullPrice().compareTo(new BigDecimal("0")) == 1){
+                R r1 = couponFeignService.saveSkuReduction(skuReductionTo);
+                // 判断远程调用是否返回success
+                Integer code1 = (Integer)r1.get("code");
+                System.out.println("********"+code1.toString());
+                if (code1 != 0){
+                    log.error("远程保存sku积分信息失败！");
+                }
             }
+
         });
 
 
