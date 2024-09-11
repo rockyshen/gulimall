@@ -5,7 +5,7 @@ spring:
   datasource:
     username: root
     password: AmRI3@n2
-    url: jdbc:mysql://118.25.46.207:3306/gulimall_wms
+    url: jdbc:mysql://47.101.200.22:3306/gulimall_wms
     driver-class-name: com.mysql.cj.jdbc.Driver
   application:
     name: gulimall-ware

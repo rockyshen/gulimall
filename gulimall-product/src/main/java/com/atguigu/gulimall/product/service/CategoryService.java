@@ -18,6 +18,7 @@ public interface CategoryService extends IService<CategoryEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
 
+    // 查处所有分类，并组装成树形解构
     List<CategoryEntity> listWithTree();
 
     void removeMenuByIds(List<Long> asList);

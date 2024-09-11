@@ -65,9 +65,8 @@ public class CategoryEntity implements Serializable {
 	 */
 	private Integer productCount;
 
-	// 声明这个不用映射mysql的表单，是我们代码需要用的
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)  //这个字段不为空的时候才包含到json中，级联菜单有用！
-	@TableField(exist = false)
+	@TableField(exist = false)                  // 声明这个字段数据库表不存在，不用映射mysql的表单，是我们代码需要用的
 	private List<CategoryEntity> children;
 
 

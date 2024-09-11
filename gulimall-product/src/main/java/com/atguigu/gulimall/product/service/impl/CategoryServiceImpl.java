@@ -41,22 +41,25 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         return new PageUtils(page);
     }
 
+    // 查处所有分类，然后组装成树形结构
     @Override
     public List<CategoryEntity> listWithTree() {
         //1、查出所有分类
         List<CategoryEntity> entities = categoryDao.selectList(null);
+        // mysql查询是性能瓶颈，先把所有数据查出来，Java中拿到后，再慢慢处理！
         //2、组装成树形结构
         //2.1 找到所有的一级分类(parent_id = 0)
         List<CategoryEntity> level1Menus = entities.stream()
-                .filter((categoryEntity) -> {
-                    return categoryEntity.getParentCid() == 0;
-                })
-                .map((menu) -> {
-                    menu.setChildren(getChildrens(menu,entities)); return menu;   // 将子分类映射到父分类，重构一下json，重新返回
+                // parent_cid=0 表示这个分类是一级分类
+                .filter(categoryEntity -> categoryEntity.getParentCid() == 0)
+                .map(menu -> {
+                    menu.setChildren(this.getChildrens(menu,entities));
+                    return menu;   // 将子分类映射到父分类，重构一下json，重新返回
                 })
                 .sorted((menu1, menu2) -> {
+                    // sorted的数字越小，排在越前面
                     return (menu1.getSort()==null?0:menu1.getSort()) - (menu2.getSort()==null?0:menu2.getSort());
-                })  // sorted的数字越小，排在越前面
+                })
                 .collect(Collectors.toList());
 
         return level1Menus;
@@ -98,22 +101,32 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         return paths;
     }
 
-    private List<CategoryEntity> getChildrens(CategoryEntity root, List<CategoryEntity> all){  // root是当前对象，all是所有对象
-
+    /**
+     * 用于实现通过调用本方法，查询当前分类的所有子分类
+     * 本方法，传入当前的根，和全部数据，返回该根节点的所有子节点
+     * @param root  当前菜单
+     * @param all   所有菜单
+     * 例如，传入一级分类：手机、整个分类menus。就能返回手机这个分类下，所有的子分类：手机通信、运营商、手机配件等等；
+     * 查询条件就是parent_cid=当前菜单的cid
+     * @return
+     */
+    private List<CategoryEntity> getChildrens(CategoryEntity root, List<CategoryEntity> all){
         List<CategoryEntity> children = all.stream()
                 .filter(categoryEntity -> {
                     return categoryEntity.getParentCid() == root.getCatId();
                 })
-                .map((categoryEntity) -> {
-                    categoryEntity.setChildren(getChildrens(categoryEntity, all));    // 递归！为什么getChildrens可以不用基于对象调用
+                .map( categoryEntity -> {
+                    // 递归！为什么getChildrens可以不用基于对象调用
+                    categoryEntity.setChildren(this.getChildrens(categoryEntity, all));
                     return categoryEntity;
                 })
                 .sorted((menu1, menu2) -> {
+                    // menu1.getSort()==null?0:menu1.getSort() 为了避免对象属性读取到null，形成空指针异常
+                    // menu1.getSort()对象属性等于空吗？如果空的话，赋值0，不等于null，就是该对象的属性值！
                     return (menu1.getSort()==null?0:menu1.getSort()) - (menu2.getSort()==null?0:menu2.getSort());
                 })
                 .collect(Collectors.toList());
-
-        return children;   // children是一个包含多个category实体的列表
+        // children是一个包含多个category实体的列表
+        return children;
     }
-
 }
