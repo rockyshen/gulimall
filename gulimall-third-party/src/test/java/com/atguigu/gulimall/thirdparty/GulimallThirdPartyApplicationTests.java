@@ -8,6 +8,7 @@ class GulimallThirdPartyApplicationTests {
 
     @Test
     void contextLoads() {
+        System.out.println();
     }
 
 }

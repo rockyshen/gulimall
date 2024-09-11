@@ -28,8 +28,26 @@ class GulimallProductApplicationTests {
     @Autowired
     private CategoryService categoryService;
 
+    @Autowired
+    private BrandService brandService;
+
 //    @Autowired
 //    private OSSClient ossClient;
+
+    /**
+     * 利用renren-generator代码逆向生成之后，
+     * 测试一下数据库是否通，插入一条数据试一下！
+     */
+    @Test
+    public void contextLoads() {
+        BrandEntity brandEntity = new BrandEntity();
+        brandEntity.setName("华为");
+        brandService.save(brandEntity);
+        System.out.println("保存成功……");
+//        CategoryEntity category = categoryService.getById(500);
+//        String name = category.getName();
+//        System.out.println(name);
+    }
 
 
     // 测试,递归查找当前catelogId及其子Id
@@ -39,19 +57,6 @@ class GulimallProductApplicationTests {
         //使用酸辣粉来日志输出，不用sout
         log.info("完整路径：{}", Arrays.asList(categoryPath));
 //        System.out.println("success");
-    }
-
-    @Test
-    public void contextLoads() {
-        // 测试插入一条数据
-//        BrandEntity brandEntity = new BrandEntity();
-//        brandEntity.setName("华为");
-//        brandService.save(brandEntity);
-//        System.out.println("保存成功……");
-
-        CategoryEntity category = categoryService.getById(500);
-        String name = category.getName();
-        System.out.println(name);
     }
 
 //    @Test
