@@ -18,12 +18,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
-        IPage<WareSkuEntity> page = this.page(
-                new Query<WareSkuEntity>().getPage(params),
-                new QueryWrapper<WareSkuEntity>()
-        );
-
-        return new PageUtils(page);
+        return null;
     }
 
 }

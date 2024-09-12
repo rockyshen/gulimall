@@ -18,12 +18,7 @@ public class UndoLogServiceImpl extends ServiceImpl<UndoLogDao, UndoLogEntity> i
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
-        IPage<UndoLogEntity> page = this.page(
-                new Query<UndoLogEntity>().getPage(params),
-                new QueryWrapper<UndoLogEntity>()
-        );
-
-        return new PageUtils(page);
+        return null;
     }
 
 }
