@@ -6,11 +6,7 @@ import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.atguigu.gulimall.product.entity.CategoryEntity;
 import com.atguigu.gulimall.product.service.CategoryService;
@@ -28,6 +24,7 @@ import com.atguigu.common.utils.R;
  */
 @RestController
 @RequestMapping("product/category")
+//@CrossOrigin(origins = {"http://localhost:8001"})
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;
