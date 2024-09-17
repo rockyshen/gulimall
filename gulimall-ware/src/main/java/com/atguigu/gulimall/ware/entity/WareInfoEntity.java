@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import java.io.Serializable;
 import java.util.Date;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -12,7 +14,7 @@ import lombok.Data;
  * 
  * @author shenjunjie
  * @email rockyshenjunjie@gmail.com
- * @date 2024-03-25 23:56:15
+ * @date 2024-09-16 14:40:41
  */
 @Data
 @TableName("wms_ware_info")
@@ -23,18 +25,22 @@ public class WareInfoEntity implements Serializable {
 	 * id
 	 */
 	@TableId
+	@JsonProperty(value="id")
 	private Long id;
 	/**
 	 * 仓库名
 	 */
+	@JsonProperty(value="name")     //配置请求体JSON中的key，和实体类的对应！
 	private String name;
 	/**
 	 * 仓库地址
 	 */
+	@JsonProperty(value="address")
 	private String address;
 	/**
 	 * 区域编码
 	 */
+	@JsonProperty(value="areacode")
 	private String areacode;
 
 }

@@ -1,24 +1,24 @@
 #迁移之nacos-配置中心
 
-#spring:
-#  datasource:
-#    username: root
-#    password: AmRI3@n2
-#    url: jdbc:mysql://47.101.200.22:3306/gulimall_sms
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#  application:
-#    name: gulimall-coupon
-#  cloud:
-#    nacos:
-#      discovery:
-#        server-addr: 127.0.0.1:8848    # mac上适用
+spring:
+  datasource:
+    username: root
+    password: AmRI3@n2
+    url: jdbc:mysql://47.101.200.22:3306/gulimall_sms
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  application:
+    name: gulimall-coupon
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848    # mac上适用
 #        server-addr: 192.168.1.11:8848     # 万业PC上适用
-#
-#mybatis-plus:
-#  mapper-locations: classpath:/mapper/**/*.xml
-#  global-config:
-#    db-config:
-#      id-type: auto
-#
-#server:
-#  port: 7001   # 7000端口被占用了
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+
+server:
+  port: 7001   # 7000端口被占用了

@@ -12,12 +12,13 @@ spring:
   cloud:
     nacos:
       discovery:
-#        server-addr: 127.0.0.1:8848     # 适用于mac
-        server-addr: 192.168.1.11:8848   # 适用于万业PC
+        server-addr: 127.0.0.1:8848     # 适用于mac
+#        server-addr: 192.168.1.11:8848   # 适用于万业PC
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss     # 定义返回给前端的JSON中日期类型的数据显示格式
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
   global-config:
     db-config:
       id-type: auto
-

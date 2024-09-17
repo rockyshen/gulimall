@@ -43,7 +43,8 @@ public class PageUtils implements Serializable {
 	
 	/**
 	 * 分页
-	 * @param list        列表数据
+	 * 利用page(page,queryWrapper)方法获得的包含数据的page对象，利用PageUtils整合构造成一个对象
+	 * @param list        列表数据，存放的是实际数据
 	 * @param totalCount  总记录数
 	 * @param pageSize    每页记录数
 	 * @param currPage    当前页数

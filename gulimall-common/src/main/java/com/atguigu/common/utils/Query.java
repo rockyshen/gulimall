@@ -19,6 +19,8 @@ import java.util.Map;
 
 /**
  * 查询参数
+ * 封装一个Query类，提供分页查询必须的page对象
+ * 从参数中读取current和limit
  *
  * @author Mark sunlightcs@gmail.com
  */
@@ -28,6 +30,13 @@ public class Query<T> {
         return this.getPage(params, null, false);
     }
 
+    /**
+     * 从参数中读取current、limit参数，封装成page对象
+     * @param params
+     * @param defaultOrderField
+     * @param isAsc
+     * @return
+     */
     public IPage<T> getPage(Map<String, Object> params, String defaultOrderField, boolean isAsc) {
         //分页参数
         long curPage = 1;
