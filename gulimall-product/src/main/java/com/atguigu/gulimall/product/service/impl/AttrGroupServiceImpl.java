@@ -43,11 +43,11 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
         // 关键字查询
         String key = (String)params.get("key");  //读取前端传来的关键字检索
         // select * from pms_attr_group where catelogId = ? and (attr_group_id=key or attr_group_name like %key%)
-        QueryWrapper<AttrGroupEntity> wrapper = new QueryWrapper<AttrGroupEntity>();
+        QueryWrapper<AttrGroupEntity> wrapper = new QueryWrapper<>();
         if (!StringUtils.isEmpty(key)){
-            //如果key关键字不为空，也就是说传了关键字
-            wrapper.and((obj)->{
-                obj.eq("attr_group_id",key).or().like("attr_group_name",key);
+            //如果key关键字不为空，也就是 传了关键字
+            wrapper.and( w->{
+                w.eq("attr_group_id",key).or().like("attr_group_name",key);
             });
         }
 

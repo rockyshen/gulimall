@@ -3,10 +3,14 @@ package com.atguigu.gulimall.ware.service.impl;
 import com.atguigu.common.constant.WareConstant;
 import com.atguigu.gulimall.ware.entity.PurchaseDetailEntity;
 import com.atguigu.gulimall.ware.service.PurchaseDetailService;
+import com.atguigu.gulimall.ware.service.WareSkuService;
 import com.atguigu.gulimall.ware.vo.MergeVo;
+import com.atguigu.gulimall.ware.vo.PurchaseDoneVo;
+import com.atguigu.gulimall.ware.vo.PurchaseItemDoneVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +33,9 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
 
     @Autowired
     private PurchaseDetailService purchaseDetailService;
+
+    @Autowired
+    private WareSkuService wareSkuService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -144,6 +151,56 @@ public class PurchaseServiceImpl extends ServiceImpl<PurchaseDao, PurchaseEntity
 //            }).collect(Collectors.toList());
             purchaseDetailService.updateBatchById(collect1);
         });
+    }
+
+    /**
+     * 采购人员完成采购单
+     * @param purchaseDoneVo
+     */
+    @Override
+    public void done(PurchaseDoneVo purchaseDoneVo) {
+        // 从vo中获取采购单id
+        Long purchaseId = purchaseDoneVo.getId();
+
+       // 从vo中获取items列表，每个item就是：该采购单中的每一个采购需求 purchaseDetail
+        List<PurchaseItemDoneVo> items = purchaseDoneVo.getItems();
+
+        // 标志位，一个采购单中，只要有一项purchaseDetailEntity的状态失败，flag就会被改为false，整个单子就是hasError
+        Boolean flag = true;
+
+        List<PurchaseDetailEntity> list = new ArrayList<>();
+        for (PurchaseItemDoneVo item : items){
+            // 经验：在进入if判断前，先new一个detailEntity，用来做浅拷贝
+            PurchaseDetailEntity detailEntity = new PurchaseDetailEntity();
+            if(item.getStatus() == WareConstant.PurchaseDetailStatusEnum.HASERROR.getCode()){
+                flag = false;
+                // 状态是失败的情况
+                detailEntity.setStatus(item.getStatus());
+            }else{
+                // 2.修改purchase_detail的状态
+                detailEntity.setStatus(WareConstant.PurchaseDetailStatusEnum.FINISH.getCode());
+                // 3.当单个purchase_detail状态是完成的，就去加库存； 给sku_id在ware_id仓库入库数量
+                PurchaseDetailEntity detail = purchaseDetailService.getById(item.getItemId());
+                wareSkuService.addStock(detail.getSkuId(),detail.getWareId(),detail.getSkuNum());
+            }
+            detailEntity.setId(item.getItemId());
+            list.add(detailEntity);
+        }
+        purchaseDetailService.updateBatchById(list);
+
+        // 1.修改purchase采购单的状态为已完成
+        PurchaseEntity purchaseEntity = new PurchaseEntity();
+        if(!flag){
+            purchaseEntity.setStatus(WareConstant.PurchaseStatusEnum.HASERROR.getCode());
+        }else{
+            purchaseEntity.setStatus(WareConstant.PurchaseStatusEnum.FINISH.getCode());
+        }
+        purchaseEntity.setUpdateTime(new Date());
+        purchaseEntity.setId(purchaseId);
+        updateById(purchaseEntity);
+
+
+
     }
 
 }

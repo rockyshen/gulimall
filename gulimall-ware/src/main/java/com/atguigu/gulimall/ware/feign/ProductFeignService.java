@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public interface ProductFeignService {
 
     /**
+     *   我们希望在ware模块下，有一个productFeignService接口，帮我们查询product模块的信息
      *      /product/skuinfo/info/{skuId}
      *
      *
@@ -16,7 +17,7 @@ public interface ProductFeignService {
      *          1、@FeignClient("gulimall-gateway")：给gulimall-gateway所在的机器发请求
      *          2、/api/product/skuinfo/info/{skuId}
      *   2）、直接让后台指定服务处理
-     *          1、@FeignClient("gulimall-gateway")
+     *          1、@FeignClient("gulimall-product")
      *          2、/product/skuinfo/info/{skuId}
      *
      * @return
