@@ -7,7 +7,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-@MapperScan("com.atguigu.gulimall.ware.dao")  //为什么要包扫描？TODO 思考：什么情况下需要MapperScan，什么情况下不需要
+@MapperScan("com.atguigu.gulimall.ware.dao")  // 这是mybatis的原生@MapperScan啊！需要搭配@Mapper一起使用
 @SpringBootApplication
 @EnableDiscoveryClient
 @EnableTransactionManagement

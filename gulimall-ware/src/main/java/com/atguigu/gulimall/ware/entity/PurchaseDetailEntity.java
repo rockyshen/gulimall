@@ -10,6 +10,8 @@ import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * 
  * 采购需求 - 实体类
@@ -57,6 +59,7 @@ public class PurchaseDetailEntity implements Serializable {
 	 * 状态[0新建，1已分配，2正在采购，3已完成，4采购失败]
 	 */
 	@JsonProperty(value = "status")
+	@NotNull
 	private Integer status;
 
 	public Long getId() {

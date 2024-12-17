@@ -1,9 +1,12 @@
 package com.atguigu.gulimall.product.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import com.atguigu.gulimall.product.entity.ProductAttrValueEntity;
+import com.atguigu.gulimall.product.service.ProductAttrValueService;
 import com.atguigu.gulimall.product.vo.AttrRespVo;
 import com.atguigu.gulimall.product.vo.AttrVo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +32,10 @@ public class AttrController {
     @Autowired
     private AttrService attrService;
 
+    @Autowired
+    private ProductAttrValueService productAttrValueService;
+
+
     /**
      * 保存
      * 默认生成的保存，只能保存到：pms_attr表单中，已经很智能了！
@@ -51,6 +58,17 @@ public class AttrController {
         PageUtils page = attrService.queryPage(params);
 
         return R.ok().put("page", page);
+    }
+
+    /**
+     * 根据spuId，查出所有productAttrValueEntity（产品属性值），用List装
+     * @param spuId
+     * @return
+     */
+    @GetMapping("/base/listforspu/{spuId}")
+    public R baseAttrlistforspu(@PathVariable("spuId") Long spuId){
+        List<ProductAttrValueEntity> entities = productAttrValueService.productAttrListforspu(spuId);
+        return R.ok().put("data",entities);
     }
 
     /**
@@ -92,6 +110,19 @@ public class AttrController {
     public R update(@RequestBody AttrVo attr){
 		attrService.updateAttr(attr);
 
+        return R.ok();
+    }
+
+    /**
+     * 根据传过来的一批ProductAttrValueEntity，用spuId定位，修改掉这些属性
+     * @param spuId
+     * @param entities
+     * @return
+     */
+    @PostMapping("/update/{spuId}")
+    public R updateSpuAttr(@PathVariable("spuId") Long spuId,
+                           @RequestBody List<ProductAttrValueEntity> entities){
+        productAttrValueService.updateSpuAttr(spuId,entities);
         return R.ok();
     }
 

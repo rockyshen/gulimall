@@ -11,7 +11,7 @@ import org.apache.ibatis.annotations.Mapper;
  * @email rockyshenjunjie@gmail.com
  * @date 2024-09-16 14:40:41
  */
-@Mapper
+@Mapper  // TODO 主启动加了@MapperScan，可以不用加@Mapper
 public interface PurchaseDao extends BaseMapper<PurchaseEntity> {
 	
 }
