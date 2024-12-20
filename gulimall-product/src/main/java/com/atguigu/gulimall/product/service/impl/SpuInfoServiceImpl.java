@@ -1,21 +1,25 @@
 package com.atguigu.gulimall.product.service.impl;
 
+import com.atguigu.common.constant.ProductStatusConstant;
+import com.atguigu.common.to.SkuHasStockVo;
 import com.atguigu.common.to.SkuReductionTo;
 import com.atguigu.common.to.SpuBoundTo;
+import com.atguigu.common.to.es.SkuEsModel;
 import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.product.dao.SpuInfoDescDao;
 import com.atguigu.gulimall.product.entity.*;
 import com.atguigu.gulimall.product.feign.CouponFeignService;
+import com.atguigu.gulimall.product.feign.SearchFeignService;
+import com.atguigu.gulimall.product.feign.WareFeignService;
 import com.atguigu.gulimall.product.service.*;
 import com.atguigu.gulimall.product.vo.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -28,10 +32,12 @@ import com.atguigu.gulimall.product.dao.SpuInfoDao;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import static com.atguigu.common.constant.ProductStatusConstant.SPU_UP;
+
 
 @Service("spuInfoService")
+@Slf4j
 public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> implements SpuInfoService {
-
     @Autowired
     private SpuInfoDescService spuInfoDescService;
 
@@ -55,6 +61,18 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
     @Autowired
     CouponFeignService couponFeignService;
+
+    @Autowired
+    private BrandService brandService;
+
+    @Autowired
+    private CategoryService categoryService;
+
+    @Autowired
+    private WareFeignService wareFeignService;
+
+    @Autowired
+    private SearchFeignService searchFeignService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -193,6 +211,87 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Override
     public void saveBaseSpuInfo(SpuInfoEntity infoEntity) {
         this.baseMapper.insert(infoEntity);
+    }
+
+    // spu上架，查出该spuId对应的所有sku，并存es
+    @Override
+    public void up(Long spuId) {
+        // 查出spuId对应所有sku信息
+        List<SkuInfoEntity> skus = skuInfoService.getSkusBySpuId(spuId);
+
+        // 查出Attrs attrs可以根据spuId查出所有，没必要在sku循环里查(product_attr_value)
+        List<ProductAttrValueEntity> baseAttrs = productAttrValueService.productAttrListforspu(spuId);
+        List<Long> attrIds = baseAttrs.stream().map(attr -> {
+            return attr.getAttrId();
+        }).collect(Collectors.toList());
+        // 传入一组id,返回search_type=1的id数组，表示可以被搜索的attr
+        List<Long> searchAttrIds = attrService.selectSearchAttrIds(attrIds);
+        Set idSet = new HashSet<>(searchAttrIds);
+
+        List<SkuEsModel.Attr> attrList = baseAttrs.stream().filter(item -> {
+            // 所有attrId中，挑选出在set中的（也就是可以被搜索的属性）
+            return idSet.contains(item.getAttrId());
+        }).map(item -> {
+            SkuEsModel.Attr attr = new SkuEsModel.Attr();
+            BeanUtils.copyProperties(item, attr);
+            return attr;
+        }).collect(Collectors.toList());
+
+        // 远程调用ware模块查，不要在循环内查，多次远程调用，性能差
+        Map<Long, Boolean> stockMap = new LinkedHashMap<>();
+        try {
+            List<Long> skuIds = skus.stream().map(SkuInfoEntity::getSkuId).collect(Collectors.toList());
+            R skuHasStock = wareFeignService.getSkuHasStock(skuIds);
+            List<SkuHasStockVo> skuHasStockVoList =  (List<SkuHasStockVo>)skuHasStock.get("data");
+
+            skuHasStockVoList.stream().forEach(skuHasStockVo -> {
+                System.out.println(skuHasStockVo.getSkuId());
+                System.out.println(skuHasStockVo.getHasStock());
+            });
+
+            // 期望变成map  skuId:hasStock    1:true   2:false
+            stockMap = skuHasStockVoList.stream()
+                    .collect(Collectors.toMap(SkuHasStockVo::getSkuId, SkuHasStockVo::getHasStock));
+        } catch (Exception e) {
+            log.info("库存服务查询异常，原因 =>",e);
+        }
+
+        // 封装es model
+        Map<Long, Boolean> finalStockMap = stockMap;
+        List<SkuEsModel> esModelList = skus.stream().map(sku -> {
+            SkuEsModel esModel = new SkuEsModel();
+            // 能对拷的对拷
+            BeanUtils.copyProperties(sku, esModel);
+            // 不能对拷的，要手动查
+            esModel.setSkuImg(sku.getSkuDefaultImg());
+            esModel.setHotScore(0L);
+
+            // hasStock
+            if(finalStockMap == null){
+                esModel.setHasStock(true);
+            }
+            esModel.setHasStock(finalStockMap.get(sku.getSkuId()));
+
+            // brandName、brandImg要根据ID查
+            BrandEntity brand = brandService.getById(esModel.getBrandId());
+            esModel.setBrandName(brand.getName());
+            esModel.setBrandImg(brand.getLogo());
+            CategoryEntity category = categoryService.getById(esModel.getCatalogId());
+            esModel.setCatalogName(category.getName());
+            // 来自第217行：attrList属性
+            esModel.setAttrs(attrList);
+            return esModel;
+        }).collect(Collectors.toList());
+
+        // 传递给gulimall-search
+        R r = searchFeignService.productStatusUp(esModelList);
+        if(r.getCode() == 0){
+            // 远程调用成功
+            // 修改'pms_spu_info'中的‘publish_status’为1
+            baseMapper.updateSpuStatus(spuId, SPU_UP.getCode());
+        }else{
+            // 远程调用失败，失败重试！
+        }
     }
 
 }

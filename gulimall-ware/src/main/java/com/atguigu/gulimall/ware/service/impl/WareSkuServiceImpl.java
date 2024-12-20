@@ -2,11 +2,14 @@ package com.atguigu.gulimall.ware.service.impl;
 
 import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.ware.feign.ProductFeignService;
+import com.atguigu.common.to.SkuHasStockVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -77,6 +80,22 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
         // 2.如果有库存记录，就更新
         // 根据特定条件进行更新，就不能用基本方法，要用mapper手动写sql了
         baseMapper.addStock(skuId,wareId,skuNum);
+    }
+
+    @Override
+    public List<SkuHasStockVo> getSkuHasStock(List<Long> skuIds) {
+        List<SkuHasStockVo> skuHasStockVoList = skuIds.stream().map(skuId -> {
+            Long count = baseMapper.getSkuStock(skuId);   // 用包装类，不要用基本数据类型
+            SkuHasStockVo skuHasStockVo = new SkuHasStockVo();
+            skuHasStockVo.setSkuId(skuId);
+            if(count==null || count == 0){
+                skuHasStockVo.setHasStock(false);
+            }else{
+                skuHasStockVo.setHasStock(true);
+            }
+            return skuHasStockVo;
+        }).collect(Collectors.toList());
+        return skuHasStockVoList;
     }
 
 }
