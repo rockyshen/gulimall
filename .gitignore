@@ -28,3 +28,4 @@ buildNumber.properties
 **/.yml
 **/.yaml
 
+/gulimall-product/src/main/resources/static/index/
