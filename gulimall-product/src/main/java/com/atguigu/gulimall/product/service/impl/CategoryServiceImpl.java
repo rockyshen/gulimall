@@ -1,6 +1,7 @@
 package com.atguigu.gulimall.product.service.impl;
 
 import com.atguigu.gulimall.product.service.CategoryBrandRelationService;
+import com.atguigu.gulimall.product.vo.Catalog2Vo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -88,6 +89,38 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         if(!StringUtils.isEmpty(category.getName())){
             categoryBrandRelationService.updateCategory(category.getCatId(),category.getName());
         }
+    }
+
+    @Override
+    public List<CategoryEntity> getLevel1Categorys() {
+        List<CategoryEntity> catLevel = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("cat_level", 1));
+        return catLevel;
+    }
+
+    // 基于一级分类id,查出所有二、三级分类，对接：CatalogLoader.js的请求
+    @Override
+    public Map<String, List<Catalog2Vo>> getCategoryJson() {
+        List<CategoryEntity> level1Categorys = getLevel1Categorys();
+        Map<String, List<Catalog2Vo>> collect = level1Categorys.stream().collect(Collectors.toMap(
+                k -> k.getCatId().toString(),
+                v -> {
+                    // 找二级分类,  v.getCatId()就是一级分类的id
+                    List<CategoryEntity> level2Categorys = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", v.getCatId()));
+                    // 某一个一级分类，查出的所有二级分类
+                    List<Catalog2Vo> catalog2VoList = level2Categorys.stream().map(level2 -> {
+                        // 基于每一个二级分类，查出所有三级分类
+                        List<CategoryEntity> level3Categorys = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", level2.getCatId()));
+                        // 三级分类：CategoryEntity  ->  Catalog3Vo
+                        List<Catalog2Vo.Catalog3Vo> catalog3VoList = level3Categorys.stream().map(level3 -> {
+                            Catalog2Vo.Catalog3Vo catalog3Vo = new Catalog2Vo.Catalog3Vo(level3.getParentCid().toString(), level3.getCatId().toString(), level3.getName());
+                            return catalog3Vo;
+                        }).collect(Collectors.toList());
+                        Catalog2Vo catalog2Vo = new Catalog2Vo(v.getCatId().toString(), catalog3VoList, level2.getCatId().toString(), level2.getName());
+                        return catalog2Vo;
+                    }).collect(Collectors.toList());
+                    return catalog2VoList;
+                }));
+        return collect;
     }
 
     // 递归方法

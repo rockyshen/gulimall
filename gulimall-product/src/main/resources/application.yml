@@ -12,6 +12,8 @@ spring:
 
   application:
     name: gulimall-product
+  thymeleaf:
+    cache: false                # 关闭缓存，实时显示效果
 
 # mybatis-plus相关配置
 mybatis-plus:
@@ -28,3 +30,4 @@ server:
 logging:
   level:
     com.atguigu.gulimall: debug
+

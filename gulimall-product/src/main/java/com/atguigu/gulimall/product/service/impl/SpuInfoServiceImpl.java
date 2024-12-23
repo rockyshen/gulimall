@@ -251,7 +251,9 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
             // 期望变成map  skuId:hasStock    1:true   2:false
             stockMap = skuHasStockVoList.stream()
-                    .collect(Collectors.toMap(SkuHasStockVo::getSkuId, SkuHasStockVo::getHasStock));
+                    .collect(Collectors.toMap(
+                            SkuHasStockVo::getSkuId,      // Function<>函数式接口，抽象方法suppl()
+                            SkuHasStockVo::getHasStock));
         } catch (Exception e) {
             log.info("库存服务查询异常，原因 =>",e);
         }
